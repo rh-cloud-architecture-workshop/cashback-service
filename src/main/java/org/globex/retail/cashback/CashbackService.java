@@ -3,7 +3,9 @@ package org.globex.retail.cashback;
 import io.quarkus.panache.common.Parameters;
 import io.vertx.core.json.JsonObject;
 import org.globex.retail.cashback.model.Cashback;
+import org.globex.retail.cashback.model.Customer;
 import org.globex.retail.cashback.model.Expense;
+import org.globex.retail.cashback.model.PagedCustomerList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +43,15 @@ public class CashbackService {
         }
         expense.cashback = cashback.cashbackId;
         calculateCashback(expense, cashback);
+    }
+
+    public PagedCustomerList findCustomers(String name, int pageIndex, int pageSize) {
+        PagedCustomerList pagedCustomerList = Customer.findCustomers(name,pageIndex, pageSize);
+        pagedCustomerList.getCustomers().forEach(c -> {
+            c.cashback = Cashback.findByCustomer(c.customerId).orElse(Cashback.builder(c.customerId).build());
+            c.expenses = Expense.findByCustomer(c.customerId);
+        });
+        return Customer.findCustomers(name,pageIndex, pageSize);
     }
 
     private void calculateCashback(Expense expense, Cashback cashback) {

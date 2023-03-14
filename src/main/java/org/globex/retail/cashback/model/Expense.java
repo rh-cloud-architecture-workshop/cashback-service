@@ -1,15 +1,25 @@
 package org.globex.retail.cashback.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.panache.common.Parameters;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.List;
+import java.util.Locale;
 
 @Entity
 @Table(name = "expense")
+@NamedQueries({
+        @NamedQuery(name = "Expense.getByCustomer", query = "from Expense where customer = :customerId")
+})
 public class Expense extends PanacheEntityBase {
 
     @Id
@@ -30,6 +40,26 @@ public class Expense extends PanacheEntityBase {
 
     @Column(name = "cashback_id")
     public Long cashback;
+
+    @JsonProperty("earnedCashback_f")
+    public String getEarnedCashbackFormatted(){
+        return NumberFormat.getCurrencyInstance(Locale.US).format(earnedCashback);
+    }
+
+    @JsonProperty("amount_f")
+    public String getAmountFormatted() {
+        return NumberFormat.getCurrencyInstance(Locale.US).format(amount);
+    }
+
+    @JsonProperty("date_f")
+    public String getDateFormatted() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG, FormatStyle.SHORT).withLocale(Locale.US).withZone(ZoneId.of("UTC"));
+        return formatter.format(date);
+    }
+
+    public static List<Expense> findByCustomer(String customerId) {
+        return find("#Expense.getByCustomer", Parameters.with("customerId", customerId)).list();
+    }
 
     public static Builder builder(Long orderId) {
         return new Builder(orderId);
