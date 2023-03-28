@@ -64,4 +64,17 @@ public class CashbackService {
         expense.earnedCashback = newExpenseCashback;
     }
 
+    @Transactional
+    public void createCustomer(Customer customer) {
+        customer.persist();
+    }
+
+    @Transactional
+    public void updateCustomer(Customer customer) {
+        Customer c = Customer.findById(customer.customerId);
+        if (c != null) {
+            c.name = customer.name;
+        }
+    }
+
 }
